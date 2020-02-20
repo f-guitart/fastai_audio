@@ -31,10 +31,10 @@ def pad_collate2d(batch):
 class AudioDataBunch(DataBunch):
     @classmethod
     def create(cls, train_ds, valid_ds, test_ds=None, path='.',
-               bs=64, equal_lengths=True, length_col=None, tfms=None, **kwargs):
+               bs=64, equal_lengths=True, length_col=None, dl_tfms=None, **kwargs):
         if equal_lengths:
             return super().create(train_ds, valid_ds, test_ds=test_ds, path=path,
-                                  bs=bs, dl_tfms=tfms, **kwargs)
+                                  bs=bs, dl_tfms=dl_tfms, **kwargs)
         else:
             datasets = super()._init_ds(train_ds, valid_ds, test_ds)
             train_ds, valid_ds, fix_ds = datasets[:3]
@@ -59,7 +59,7 @@ class AudioDataBunch(DataBunch):
                 test_dl = DataLoader(test_ds, batch_size=1, **kwargs)
                 dataloaders.append(test_dl)
 
-            return cls(*dataloaders, path=path, collate_fn=pad_collate1d, tfms=tfms)
+            return cls(*dataloaders, path=path, collate_fn=pad_collate1d, tfms=dl_tfms)
 
     def show_batch(self, rows:int=5, ds_type:DatasetType=DatasetType.Train, **kwargs):
         dl = self.dl(ds_type)
@@ -95,7 +95,7 @@ class AudioItemList(ItemList):
         """Get the filenames in `col` of `df` and will had `path/folder` in front of them,
         `suffix` at the end. `create_func` is used to open the audio files."""
         suffix = suffix or ''
-        res = super().from_df(df, path=path, col=col, length_col=length_col)
+        res = super().from_df(df, path=path, cols=col)
         res.items = np.char.add(np.char.add(f'{folder}/', res.items.astype(str)), suffix)
         res.items = np.char.add(f'{res.path}/', res.items)
         return res
